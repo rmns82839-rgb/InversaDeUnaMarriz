@@ -7,7 +7,6 @@ const defaultMatrix3x3 = [
 
 // Función para calcular el Máximo Común Divisor (necesario para simplificar fracciones)
 function gcd(a, b) {
-    // Asegura que 'a' y 'b' sean enteros positivos para el cálculo
     a = Math.abs(Math.round(a));
     b = Math.abs(Math.round(b));
     return b ? gcd(b, a % b) : a;
@@ -20,23 +19,19 @@ function formatNumber(num) {
     if (Math.abs(num) < 1e-9) {
         return '0'; 
     }
-    // Si es un entero, lo devuelve como entero
     if (num % 1 === 0) {
         return num.toString();
     }
-    // Si no, usa precisión para manejar decimales
     return Number(num).toPrecision(5).replace(/\.0+$/, ''); 
 }
 
 /**
  * Convierte un número y un denominador a una fracción simplificada.
- * Devuelve un objeto { numerator: number, denominator: number, latex: string }
  */
 function toFraction(num, den) {
     if (den === 0) return { numerator: num, denominator: 0, latex: `\\frac{${formatNumber(num)}}{0}` };
     if (num === 0) return { numerator: 0, denominator: 1, latex: '0' };
     
-    // Convertir a enteros para evitar errores de coma flotante en el MCD
     const factor = 10000; 
     let n = Math.round(num * factor);
     let d = Math.round(den * factor);
@@ -45,13 +40,11 @@ function toFraction(num, den) {
     n = n / common;
     d = d / common;
 
-    // Asegurar que el signo esté en el numerador
     if (d < 0) {
         n = -n;
         d = -d;
     }
 
-    // Simplificar el caso de enteros
     if (d === 1) {
         return { numerator: n, denominator: 1, latex: n.toString() };
     }
@@ -72,7 +65,6 @@ function saveMatrixData() {
     localStorage.setItem('matrixSize', size);
     localStorage.setItem('matrixData', JSON.stringify(matrixData));
     
-    // Guardar también los datos del estudiante
     const studentInfo = {
         alumno: document.getElementById('info-alumno').value,
         materia: document.getElementById('info-materia').value,
@@ -84,21 +76,17 @@ function saveMatrixData() {
 }
 
 function saveMatrixSize() {
-    // Guarda el tamaño cuando se cambia el selector
     const size = document.getElementById('matrixSize').value;
     localStorage.setItem('matrixSize', size);
 }
 
 function loadState() {
-    // Cargar tamaño de matriz
     const storedSize = localStorage.getItem('matrixSize');
     if (storedSize) {
         document.getElementById('matrixSize').value = storedSize;
     }
-    // ESTA FUNCIÓN DEBE EJECUTARSE PARA DIBUJAR LOS INPUTS DE LA MATRIZ
     generateMatrixInputs(); 
 
-    // Cargar datos de la matriz
     const storedData = localStorage.getItem('matrixData');
     if (storedData) {
         const matrix = JSON.parse(storedData);
@@ -113,7 +101,6 @@ function loadState() {
         }
     }
 
-    // Cargar datos del estudiante
     const storedInfo = localStorage.getItem('studentInfo');
     if (storedInfo) {
         const info = JSON.parse(storedInfo);
@@ -133,7 +120,6 @@ function generateMatrixInputs() {
     const inputDiv = document.getElementById('matrix-input');
     inputDiv.innerHTML = '';
     
-    // Esto es clave: define el grid para que los inputs se coloquen
     inputDiv.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
 
     for (let i = 0; i < size; i++) {
@@ -143,14 +129,12 @@ function generateMatrixInputs() {
             input.id = `a${i}${j}`;
             input.placeholder = `A[${i+1}, ${j+1}]`;
             
-            // Carga el valor por defecto solo si no hay datos guardados
             let defaultValue = 0;
             if (size === 3 && defaultMatrix3x3[i] && defaultMatrix3x3[i][j] !== undefined) {
                  defaultValue = defaultMatrix3x3[i][j];
             }
             input.value = defaultValue;
             
-            // Guardar al cambiar cualquier input
             input.oninput = saveMatrixData;
             
             inputDiv.appendChild(input);
@@ -174,26 +158,34 @@ function getMatrix() {
     return matrix;
 }
 
-function generateLatexMatrix(matrix) {
+function generateLatexMatrix(matrix, delimiter = 'p') {
     if (!matrix || matrix.length === 0) return '';
     
     let content = '';
 
     matrix.forEach((row, rIndex) => {
-        content += row.join(' & ');
+        const rowStrings = row.map(item => String(item));
+        content += rowStrings.join(' & ');
         if (rIndex < matrix.length - 1) {
             content += ' \\\\ ';
         }
     });
 
-    return `$$\\begin{pmatrix} ${content} \\end{pmatrix}$$`;
+    return `$$\\begin{${delimiter}matrix} ${content} \\end{${delimiter}matrix}$$`;
 }
 
+function getSignMatrixLatex() {
+    const signs = [
+        ['+', '-', '+'],
+        ['-', '+', '-'],
+        ['+', '-', '+']
+    ];
+    return generateLatexMatrix(signs, 'v');
+}
 
 // --- Visualización de Sarrus (3x5) ---
 function generateSarrusVisual(A) {
     const sarrus = [];
-    // Duplicar las primeras dos columnas
     A.forEach(row => sarrus.push([...row, row[0], row[1]]));
 
     let html = '<div class="sarrus-container"><div class="sarrus-matrix">';
@@ -202,15 +194,14 @@ function generateSarrusVisual(A) {
         for (let j = 0; j < 5; j++) {
             const value = formatNumber(sarrus[i][j]);
             
-            // Clases para las diagonales: p1, p2, p3 (positivas); n1, n2, n3 (negativas)
             let sarrus_class = '';
             
-            // Positivas (suma) - Colores distintos (p1, p2, p3)
+            // Positivas (suma)
             if ((i === 0 && j === 0) || (i === 1 && j === 1) || (i === 2 && j === 2)) sarrus_class += ' p1';
             if ((i === 0 && j === 1) || (i === 1 && j === 2) || (i === 2 && j === 3)) sarrus_class += ' p2';
             if ((i === 0 && j === 2) || (i === 1 && j === 3) || (i === 2 && j === 4)) sarrus_class += ' p3';
             
-            // Negativas (resta) - Colores distintos (n1, n2, n3)
+            // Negativas (resta)
             if ((i === 0 && j === 2) || (i === 1 && j === 1) || (i === 2 && j === 0)) sarrus_class += ' n1';
             if ((i === 0 && j === 3) || (i === 1 && j === 2) || (i === 2 && j === 1)) sarrus_class += ' n2';
             if ((i === 0 && j === 4) || (i === 1 && j === 3) || (i === 2 && j === 2)) sarrus_class += ' n3';
@@ -232,15 +223,11 @@ function generateMinorVisual(A, r, c) {
         }
     }
     
-    // a, b, c, d son los elementos del menor
-    const elem_a = formatNumber(tempMatrix[0][0]); // Top-Left
-    const elem_b = formatNumber(tempMatrix[0][1]); // Top-Right
-    const elem_c = formatNumber(tempMatrix[1][0]); // Bottom-Left
-    const elem_d = formatNumber(tempMatrix[1][1]); // Bottom-Right
+    const elem_a = formatNumber(tempMatrix[0][0]); 
+    const elem_b = formatNumber(tempMatrix[0][1]); 
+    const elem_c = formatNumber(tempMatrix[1][0]); 
+    const elem_d = formatNumber(tempMatrix[1][1]); 
     
-    // Usamos clases de color únicas para las dos diagonales de 2x2:
-    // Positiva (a * d): minor-pos-A y minor-pos-B (mismo color)
-    // Negativa (c * b): minor-neg-A y minor-neg-B (mismo color, diferente al anterior)
     return `
         <div class="minor-elements">
             <span class="minor-pos-A">${elem_a}</span>
@@ -254,10 +241,8 @@ function generateMinorVisual(A, r, c) {
 // --- Lógica de Cálculo (3x3) ---
 
 function calculateDeterminant(A) {
-    // Texto de error sin caracteres LaTeX innecesarios
     if (A.length !== 3) return { det: NaN, step: "El cálculo detallado del determinante de N distinto de 3 no está implementado." };
 
-    // CORREGIDO: Usar variables largas para evitar el error de "has already been declared"
     const a11 = A[0][0], a12 = A[0][1], a13 = A[0][2];
     const a21 = A[1][0], a22 = A[1][1], a23 = A[1][2];
     const a31 = A[2][0], a32 = A[2][1], a33 = A[2][2];
@@ -274,26 +259,25 @@ function calculateDeterminant(A) {
     
     const det = posSum - negSum;
     
+    // Texto de explicación limpio
     const step = `
-        <p><strong>Visualización de la Regla de Sarrus:</strong></p>
+        <p>Visualización de la Regla de Sarrus:</p>
         ${generateSarrusVisual(A)}
         $$\\text{det}(A) = (${formatNumber(term1)} + ${formatNumber(term2)} + ${formatNumber(term3)}) - (${formatNumber(term4)} + ${formatNumber(term5)} + ${formatNumber(term6)})$$
         $$\\text{det}(A) = (${formatNumber(posSum)}) - (${formatNumber(negSum)})$$
         $$\\text{det}(A) = ${formatNumber(posSum - negSum)}$$
-        $$\\text{det}(A) = \\mathbf{${formatNumber(det)}}$$
+        $$\\text{det}(A) = ${formatNumber(det)}$$
     `;
 
     return { det, step };
 }
 
 function calculateCofactorMatrix(A) {
-    // Texto de error sin caracteres LaTeX innecesarios
-    if (A.length !== 3) return { C: null, steps: ["El cálculo detallado de cofactores de N distinto de 3 no está implementado."] };
+    if (A.length !== 3) return { C_raw: null, C_display: null, steps: ["El cálculo detallado de cofactores de N distinto de 3 no está implementado."] };
     
     const minors = [];
     const steps = [];
     
-    // Fila y columna de cada cofactor
     const indices = [
         { r: 0, c: 0, sign: '+' }, { r: 0, c: 1, sign: '-' }, { r: 0, c: 2, sign: '+' },
         { r: 1, c: 0, sign: '-' }, { r: 1, c: 1, sign: '+' }, { r: 1, c: 2, sign: '-' },
@@ -319,32 +303,33 @@ function calculateCofactorMatrix(A) {
         const cofactor = (idx.sign === '-') ? -minorVal : minorVal;
         minors.push(cofactor);
 
-        // Generación del paso a paso detallado con la visualización 2x2
         const visualMinor = generateMinorVisual(A, idx.r, idx.c);
 
         steps.push(`
             <div class="minor-step-detail">
-                $$\\mathbf{C}_{${idx.r + 1}${idx.c + 1}} = ${idx.sign}\\begin{vmatrix} ${formatNumber(elem_a)} & ${formatNumber(elem_b)} \\\\ ${formatNumber(elem_c)} & ${formatNumber(elem_d)} \\end{vmatrix}$$
+                $$C_{${idx.r + 1}${idx.c + 1}} = ${idx.sign}\\begin{vmatrix} ${formatNumber(elem_a)} & ${formatNumber(elem_b)} \\\\ ${formatNumber(elem_c)} & ${formatNumber(elem_d)} \\end{vmatrix}$$
                 ${visualMinor}
                 $$= ${idx.sign}((${formatNumber(elem_a)})(${formatNumber(elem_d)}) - (${formatNumber(elem_c)})(${formatNumber(elem_b)}))$$
                 $$= ${idx.sign}(${formatNumber(prod1)} - ${formatNumber(prod2)})$$
-                $$= ${idx.sign}(${formatNumber(minorVal)}) = \\mathbf{${formatNumber(cofactor)}}$$
+                $$= ${idx.sign}(${formatNumber(minorVal)}) = ${formatNumber(cofactor)}$$
             </div>
         `);
     });
 
-    const C = [
-        minors.slice(0, 3).map(formatNumber),
-        minors.slice(3, 6).map(formatNumber),
-        minors.slice(6, 9).map(formatNumber)
+    const C_raw = [
+        minors.slice(0, 3),
+        minors.slice(3, 6),
+        minors.slice(6, 9)
     ];
 
-    return { C, steps };
+    const C_display = C_raw.map(row => row.map(formatNumber));
+
+    return { C_raw, C_display, steps };
 }
 
 
 function calculateInverse() {
-    saveMatrixData(); // Guarda la matriz actual antes de calcular
+    saveMatrixData(); 
     
     const A = getMatrix();
     const size = A.length;
@@ -360,7 +345,7 @@ function calculateInverse() {
     if (size !== 3) {
         html += `<div class="step" style="border-left-color: #dc3545; background-color: #f8d7da;">
             <h2>Cálculo Limitado</h2>
-            <p>El método de la Matriz Adjunta (paso a paso de cofactores) es **computacionalmente inviable** para matrices de orden superior. La salida solo muestra la matriz de entrada. Por favor, seleccione **3 x 3** para el cálculo detallado.</p>
+            <p>El método de la Matriz Adjunta solo está implementado para matrices 3 x 3.</p>
         </div>`;
         resultsDiv.innerHTML = html;
         if (typeof MathJax !== 'undefined') MathJax.typesetPromise([resultsDiv]);
@@ -374,14 +359,14 @@ function calculateInverse() {
 
     html += `<div class="step">
         <h2>1. Cálculo del Determinante (det(A))</h2>
-        <p>Desarrollo del determinante por la Regla de Sarrus: (iniciamos la multiplicación desde el primer número en verde)</p>
+        <p>Desarrollo del determinante por la Regla de Sarrus:</p>
         <div class="matrix-formula">${detStep}</div>
     </div>`;
 
     if (Math.abs(det) < 1e-9) { 
         html += `<div class="step" style="border-left-color: #dc3545; background-color: #f8d7da;">
             <h2>Resultado Final</h2>
-            <p><strong>El determinante es CERO (${formatNumber(det)}).</strong> La matriz **NO** tiene inversa.</p>
+            <p>El determinante es CERO (${formatNumber(det)}). La matriz NO tiene inversa, es singular.</p>
         </div>`;
         resultsDiv.innerHTML = html;
         if (typeof MathJax !== 'undefined') MathJax.typesetPromise([resultsDiv]);
@@ -389,46 +374,55 @@ function calculateInverse() {
     }
 
     // 2. Cofactores
-    const { C, steps: CSteps } = calculateCofactorMatrix(A);
+    const { C_raw, C_display, steps: CSteps } = calculateCofactorMatrix(A);
     
-    // Texto de descripción de Paso 2, usa solo texto plano
+    // Matriz de Signos (texto limpio)
     html += `<div class="step">
-        <h2>2. Cálculo de la Matriz de Cofactores (C)</h2>
-        <p>Cada cofactor C_ij se calcula como (signo)^i+j por el Menor M_ij:</p>
+        <h2>2. Matriz de Cofactores (C)</h2>
+        <h3>2.1 Matriz de Signos</h3>
+        <p>Los cofactores se calculan aplicando el signo a cada menor. La matriz de signos es</p>
+        <div class="matrix-formula sign-matrix">${getSignMatrixLatex()}</div>
+        
+        <h3>2.2 Cálculo Detallado de los 9 Cofactores</h3>
+        <p>Cada cofactor se calcula como el signo por el determinante del menor correspondiente</p>
         <div class="cofactor-grid">${CSteps.join('\n')}</div>
-        <p><strong>Matriz de Cofactores (C):</strong></p>
-        <div class="matrix-formula">${generateLatexMatrix(C)}</div>
+        <p>Matriz de Cofactores (C)</p>
+        <div class="matrix-formula">${generateLatexMatrix(C_display)}</div>
     </div>`;
 
-    // 3. Adjunta
-    const adjA = [
-        [C[0][0], C[1][0], C[2][0]],
-        [C[0][1], C[1][1], C[2][1]],
-        [C[0][2], C[1][2], C[2][2]]
+    // 3. Adjunta (Transpuesta de Cofactores)
+    const adjA_raw = [
+        [C_raw[0][0], C_raw[1][0], C_raw[2][0]],
+        [C_raw[0][1], C_raw[1][1], C_raw[2][1]],
+        [C_raw[0][2], C_raw[1][2], C_raw[2][2]]
     ];
+    const adjA_display = adjA_raw.map(row => row.map(formatNumber));
 
-    // Texto de descripción de Paso 3, usa solo texto plano
+    // Explicación de Paso 3 (texto limpio)
     html += `<div class="step">
-        <h2>3. Cálculo de la Matriz Adjunta (adj(A))</h2>
-        <p>La matriz adjunta es la transpuesta de la Matriz de Cofactores (C transpuesta):</p>
-        <div class="matrix-formula">${generateLatexMatrix(adjA)}</div>
+        <h2>3. Matriz Adjunta (adj(A)) (Transpuesta de C)</h2>
+        <p>La Matriz Adjunta Traspuesta: convertir las filas en columnas o viceversa.</p>
+        $$\\text{adj}(A) = C^T$$
+        <div class="matrix-formula">${generateLatexMatrix(adjA_display)}</div>
     </div>`;
 
-    // 4. Inversa
-    const invAFractionsLatex = adjA.map(row => row.map(valStr => {
-        const fraction = toFraction(Number(valStr), det);
+    // 4. Inversa (División por el Determinante)
+    const invAFractionsLatex = adjA_raw.map(row => row.map(val => {
+        const fraction = toFraction(val, det);
         return fraction.latex;
     }));
 
-    const invADecimal = adjA.map(row => row.map(valStr => Number(valStr) / det).map(formatNumber));
+    const invADecimal = adjA_raw.map(row => row.map(val => val / det).map(formatNumber));
 
-    // Texto de descripción de Paso 4, solo fórmulas usan MathJax
+    // Explicación de Paso 4 (texto limpio)
     html += `<div class="step" style="border-left-color: #f1c40f; background-color: #fffaf0;">
-        <h2>4. Cálculo de la Matriz Inversa (A⁻¹)</h2>
-        <p>La inversa se calcula con la fórmula: $$A^{-1} = \\frac{1}{\\text{det}(A)} \\cdot \\text{adj}(A)$$</p>
-        <p><strong>Matriz Inversa (A⁻¹) en Fracciones Simplificadas:</strong></p>
+        <h2>4. Matriz Inversa (A⁻¹)</h2>
+        <p>Finalmente, se divide la Matriz Adjunta por el Determinante (${formatNumber(det)}), el cual actúa como un factor escalar:</p>
+        $$A^{-1} = \\frac{1}{\\text{det}(A)} \\cdot \\text{adj}(A) = \\frac{1}{${formatNumber(det)}} \\cdot ${generateLatexMatrix(adjA_display)}$$
+        
+        <p>Matriz Inversa en Fracciones Simplificadas</p>
         <div class="matrix-formula">${generateLatexMatrix(invAFractionsLatex)}</div>
-        <p><strong>Matriz Inversa (A⁻¹) en Decimales (aproximada):</strong></p>
+        <p>Matriz Inversa en Decimales (aproximada)</p>
         <div class="matrix-formula">${generateLatexMatrix(invADecimal)}</div>
     </div>`;
 
@@ -436,10 +430,9 @@ function calculateInverse() {
     if (typeof MathJax !== 'undefined') MathJax.typesetPromise([resultsDiv]);
 }
 
-// --- Funciones de Control ---
+// --- Funciones de Control (sin cambios) ---
 
 function resetInputs() {
-    // Reinicia los inputs de la matriz a 0 y los datos del estudiante a vacío
     const size = parseInt(document.getElementById('matrixSize').value);
     for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
@@ -453,8 +446,8 @@ function resetInputs() {
     document.getElementById('info-sede').value = '';
     document.getElementById('info-jornada').value = '';
 
-    clearResults(); // También borra los resultados
-    saveMatrixData(); // Guarda el estado de reseteo
+    clearResults(); 
+    saveMatrixData(); 
 }
 
 function clearResults() {
@@ -462,22 +455,17 @@ function clearResults() {
 }
 
 function printResults() {
-    // Primero, asegura que se muestre el resultado actual.
     calculateInverse(); 
-    
-    // Luego, imprime.
     window.print();
 }
 
-// --- Inicialización del DOM ---
+// --- Inicialización del DOM (sin cambios) ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Cargar el estado guardado al inicio
     loadState();
     
-    // Asignar eventos a los botones y selectores
     document.getElementById('matrixSize').addEventListener('change', () => {
-        saveMatrixSize(); // Guarda el nuevo tamaño
-        generateMatrixInputs(); // Dibuja los inputs para el nuevo tamaño
+        saveMatrixSize(); 
+        generateMatrixInputs(); 
         clearResults();
     });
     
@@ -485,10 +473,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('clear-inputs').addEventListener('click', resetInputs);
     document.getElementById('print-btn').addEventListener('click', printResults);
     
-    // Guardar información del estudiante al cambiar
     const infoInputs = ['info-alumno', 'info-materia', 'info-carrera', 'info-sede', 'info-jornada'];
     infoInputs.forEach(id => {
         document.getElementById(id).addEventListener('input', saveMatrixData);
     });
 });
-          
