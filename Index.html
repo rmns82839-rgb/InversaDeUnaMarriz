@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Inversa de Matriz Dinámica</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Inversa de Matriz (N x N)</h1>
+
+        <div class="student-info">
+            <h2>Datos del Ejercicio</h2>
+            <div class="info-grid">
+                <input type="text" placeholder="Alumno/a" id="info-alumno">
+                <input type="text" placeholder="Materia" id="info-materia">
+                <input type="text" placeholder="Carrera" id="info-carrera">
+                <input type="text" placeholder="Sede/Campus" id="info-sede">
+                <input type="text" placeholder="Jornada" id="info-jornada">
+            </div>
+        </div>
+        
+        <div class="size-selector">
+            <label for="matrixSize">Selecciona el tamaño de la matriz (N):</label>
+            <select id="matrixSize" onchange="generateMatrixInputs(); saveMatrixSize()">
+                <option value="2">2x2</option>
+                <option value="3" selected>3x3</option>
+                <option value="4">4x4</option>
+            </select>
+        </div>
+
+        <h2>Matriz de Entrada A:</h2>
+        <div id="matrix-input">
+            </div>
+
+        <div class="control-buttons">
+            <button onclick="calculateInverse()">Calcular Inversa (Paso a Paso)</button>
+            <button class="secondary" onclick="resetInputs()">Reiniciar Matriz</button>
+            <button class="tertiary" onclick="clearResults()">Borrar Resultados</button>
+            <button class="primary-print" onclick="printResults()">Imprimir Resultado</button>
+        </div>
+
+        <div id="results">
+            </div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        // Mantenemos la llamada aquí para asegurar que DOMContentLoaded se dispara.
+        document.addEventListener('DOMContentLoaded', loadState);
+    </script>
+</body>
+</html>
