@@ -336,3 +336,67 @@ h2 {
         max-width: 100%;
     }
 }
+
+/* ---------------------------------------------------------------------- */
+/* --- ESTILOS ESPECÍFICOS PARA IMPRESIÓN (Print Media Query) --- */
+/* ---------------------------------------------------------------------- */
+@media print {
+    /* 1. Ocultar los botones de control */
+    .control-buttons,
+    /* 2. Ocultar la sección de selección de tamaño */
+    .size-selector {
+        display: none !important;
+    }
+
+    /* 3. Asegurar que el contenido principal ocupe todo el ancho */
+    .container {
+        /* Quita la sombra y el fondo que suelen ser desperdicio de tinta */
+        box-shadow: none !important;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    
+    /* 4. Asegurar que los inputs de datos del estudiante se vean como texto */
+    .student-info input {
+        border: none !important;
+        border-bottom: 1px dashed #333 !important; /* Simula una línea de formulario */
+        padding: 0 !important;
+    }
+
+    /* 5. Asegurar que los pasos de cálculo y fórmulas se impriman claramente */
+    .step {
+        border: 1px solid #ccc !important;
+        background-color: #ffffff !important;
+        page-break-inside: avoid; /* Intenta evitar cortar pasos a mitad de página */
+    }
+
+    /* 6. Mejorar la visualización del logo y título si existen */
+    header {
+        text-align: left !important;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #333;
+    }
+    
+    /* 7. Eliminar márgenes de la fórmula LaTeX para aprovechar el espacio */
+    .matrix-formula {
+        padding: 5px 0 !important;
+        border: none !important;
+        background-color: transparent !important;
+        overflow: visible !important; /* Desactiva el scroll */
+    }
+    
+    /* 8. Asegurar que los bloques de cofactores se organicen en impresión */
+    .cofactor-grid {
+        display: block;
+        gap: 0;
+    }
+    .minor-step-detail {
+        /* Imprime uno tras otro */
+        max-width: 100%;
+        margin-bottom: 10px;
+        border: 1px solid #eee;
+        page-break-inside: avoid;
+    }
+}
