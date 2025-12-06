@@ -28,7 +28,7 @@
     </div>
     
     <div class="size-selector">
-        <label for="matrixSize">Seleccionar Tamaño de Matriz (N x N):</label>
+        <label for="matrixSize"></label>
         <select id="matrixSize" onchange="generateMatrixInputs(); saveMatrixSize();">
             <option value="2">2 x 2</option>
             <option value="3" selected>3 x 3</option>
@@ -40,9 +40,9 @@
         </div>
 
     <div class="control-buttons">
-        <button id="calculate-det" onclick="calculateInverse()">Calcular Inversa (Paso a Paso)</button>
-        <button class="secondary" id="clear-inputs" onclick="resetInputs()">Reiniciar Matriz/Datos</button>
-        <button class="primary-print" id="print-btn" onclick="printResults()">Imprimir Resultado 🖨️</button>
+        <button id="calculate-det" onclick="calculateInverse()">Paso a Paso🧮</button>
+        <button class="secondary" id="clear-inputs" onclick="resetInputs()">↩️</button>
+        <button class="primary-print" id="print-btn" onclick="printResults()">🖨️</button>
     </div>
 
     <div id="results">
