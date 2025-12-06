@@ -1,0 +1,338 @@
+/* --- Estilos Generales --- */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #e9ebee;
+    color: #333;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #007bff;
+    text-align: center;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+}
+
+h2 {
+    color: #333;
+    margin-top: 25px;
+}
+
+/* --- Datos del Estudiante (sin cambios) --- */
+.student-info {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f7faff;
+}
+
+.student-info h2 {
+    color: #3498db;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.info-grid input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+/* --------------------------- */
+
+.size-selector {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+#matrixSize {
+    padding: 8px;
+    margin-left: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+#matrix-input {
+    display: grid;
+    gap: 5px; 
+    margin-bottom: 20px;
+}
+
+#matrix-input input {
+    width: 100%; 
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box; 
+}
+
+/* --- Botones de Control (sin cambios) --- */
+.control-buttons {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.control-buttons button {
+    flex-grow: 1; 
+    padding: 12px;
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+.control-buttons button:hover {
+    background-color: #27ae60;
+    transform: translateY(-2px);
+}
+
+.control-buttons button.secondary {
+    background-color: #f39c12; 
+    font-size: 16px;
+}
+
+.control-buttons button.secondary:hover {
+    background-color: #e67e22;
+}
+
+.control-buttons button.tertiary {
+    background-color: #e74c3c; 
+    font-size: 16px;
+}
+
+.control-buttons button.tertiary:hover {
+    background-color: #c0392b;
+}
+
+.control-buttons button.primary-print {
+    background-color: #34495e; 
+    font-size: 16px;
+}
+
+.control-buttons button.primary-print:hover {
+    background-color: #2c3e50;
+}
+/* -------------------------- */
+
+
+.step {
+    border: 1px solid #dcdcdc;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-left: 6px solid #3498db;
+    background-color: #f7faff;
+    border-radius: 8px;
+}
+
+.step h2 {
+    color: #3498db;
+    margin-top: 0;
+}
+
+.matrix-formula {
+    text-align: center;
+    margin: 15px 0;
+    padding: 10px;
+    border: 1px solid #eee;
+    background-color: #fff;
+    border-radius: 5px;
+    /* Permitir scroll horizontal en fórmulas */
+    overflow-x: auto; 
+    font-size: 1.2em;
+}
+
+/* Contenedor de Cofactores 2x2: Asegura que cada bloque ocupe el ancho */
+.cofactor-grid {
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: space-around;
+    gap: 20px;
+}
+
+.minor-step-detail {
+    flex: 1 1 250px; 
+    max-width: 300px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    text-align: center;
+}
+
+/* --- ESTILOS DE MATRIZ SIN LÍNEAS (solo colores) --- */
+
+.sarrus-container, .minor-matrix {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: monospace;
+    font-size: 20px;
+    padding: 20px 0;
+    /* CLAVE para el formato 3x5: Permite scroll si la matriz es demasiado ancha */
+    overflow-x: auto;
+}
+
+/* 🛑 CLAVE para forzar el formato 3 FILAS x 5 COLUMNAS 🛑 */
+.sarrus-matrix {
+    display: grid;
+    /* Esto garantiza 5 columnas y el contenido fluirá en 3 filas */
+    grid-template-columns: repeat(5, auto); 
+    gap: 5px 10px; 
+    padding: 0 10px;
+    position: relative;
+    font-size: 18px; 
+    /* Borde visual para la matriz 3x3 original */
+    border-left: 1px solid #aaa;
+    border-right: 1px solid #aaa;
+}
+
+/* Contenedor principal de la matriz 2x2 (Cofactores) */
+.minor-elements {
+    display: grid;
+    grid-template-columns: repeat(2, auto); 
+    gap: 10px 25px; 
+    padding: 10px;
+    position: relative;
+    font-size: 20px;
+    line-height: 1;
+    /* Borde visual de determinante */
+    border-left: 2px solid #333;
+    border-right: 2px solid #333;
+    padding: 10px;
+}
+
+/* Estilo básico de los números */
+.sarrus-matrix span, .minor-elements span {
+    position: relative;
+    padding: 5px 8px; /* Padding para dar espacio al color de fondo */
+    font-weight: bold;
+    color: #333;
+    z-index: 10; 
+    display: inline-block; 
+    text-align: center;
+    min-width: 15px;
+    border-radius: 4px; /* Suavizar esquinas */
+    transition: background-color 0.3s;
+}
+
+/* --- ELIMINAR ESTILOS DE LÍNEAS --- */
+/* Regla crucial: anula los pseudo-elementos que dibujaban líneas */
+.sarrus-matrix span::after, .sarrus-matrix span::before,
+.minor-elements span::before, .minor-elements span::after {
+    content: none !important;
+}
+
+/* ---------------------------------------------------------------------- */
+/* 🟢 COLORES DE OPERACIÓN (Positiva/Suma vs. Negativa/Resta) 🔴 */
+/* ---------------------------------------------------------------------- */
+
+/* --- Positivas (SUMA) - Tonalidades de VERDE --- */
+/* CLAVE: Cada grupo tiene un tono de verde diferente para distinguirse */
+.sarrus-matrix .p1 { 
+    background-color: #d1e7dd; /* Verde más claro */
+    color: #0f5132; 
+}
+.sarrus-matrix .p2 { 
+    background-color: #c7eedb; /* Tono intermedio */
+    color: #0f5132; 
+}
+.sarrus-matrix .p3 { 
+    background-color: #bdf5d9; /* Verde más brillante */
+    color: #0f5132; 
+}
+
+/* --- Negativas (RESTA) - Tonalidades de ROJO --- */
+/* CLAVE: Cada grupo tiene un tono de rojo diferente para distinguirse */
+.sarrus-matrix .n1 { 
+    background-color: #f8d7da; /* Rojo más claro */
+    color: #842029; 
+}
+.sarrus-matrix .n2 { 
+    background-color: #f5c6cb; /* Tono intermedio */
+    color: #842029; 
+}
+.sarrus-matrix .n3 { 
+    background-color: #f1b3bc; /* Rojo más saturado */
+    color: #842029; 
+}
+
+/* ---------------------------------------------------------------------- */
+/* --- COLORES PARA DIAGONALES DE COFACTORES (2x2) --- */
+/* ---------------------------------------------------------------------- */
+
+/* Positivos (a*d) - Azul Claro (SUMA) */
+.minor-elements .minor-pos-A,
+.minor-elements .minor-pos-B {
+    background-color: #cce5ff; 
+    color: #004085; 
+}
+
+/* Negativos (c*b) - Amarillo Claro (RESTA) */
+.minor-elements .minor-neg-A,
+.minor-elements .minor-neg-B {
+    background-color: #fff3cd; 
+    color: #856404; 
+}
+
+
+/* --- Media Queries para Responsividad (Celulares) --- */
+@media (max-width: 600px) {
+    body {
+        padding: 10px; 
+    }
+    .container {
+        padding: 15px;
+    }
+    
+    /* Espaciado de Sarrus en móvil */
+    .sarrus-matrix {
+        gap: 4px 6px; 
+        font-size: 14px; 
+    }
+    .sarrus-matrix span {
+        padding: 4px 6px; 
+    }
+    
+    /* Espaciado 2x2 en móvil */
+    .minor-elements {
+        gap: 6px 10px;
+        font-size: 16px;
+    }
+
+    /* Cofactor Grid: Asegurar que se vean bien en columna */
+    .minor-step-detail {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+}
