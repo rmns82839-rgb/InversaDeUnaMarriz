@@ -1,8 +1,8 @@
 // Valores de ejemplo para la matriz 3x3 de tu ejercicio
 const defaultMatrix3x3 = [
-    [0, 5, -4],
-    [1, -7, 9],
-    [2, 0, 2]
+    [4, -2, 1],
+    [-1, 3, 0],
+    [2, -5, 6]
 ];
 
 // Estado global para el flujo paso a paso
@@ -387,7 +387,7 @@ function calculateDeterminant(A) {
     const visualNeg2 = generateSarrusDetailVisual(A, 1, 2, false);
     const visualNeg3 = generateSarrusDetailVisual(A, 2, 2, false);
     
-    // TEXTO LIMPIO para las explicaciones
+    // TEXTO LIMPIO para las explicaciones (Manteniendo LaTeX solo en $$...$$)
     const step = `
         <h3>1.1 Sumas Positivas (+)</h3>
         <p>Se multiplican los elementos de las diagonales que van de izquierda a derecha y se suman:</p>
@@ -557,11 +557,11 @@ function calculateInverse() {
     let step2Content = `<div id="step-2" class="step hidden-step">
         <h2>Paso 2: Matriz de Cofactores (C)</h2>
         <h3>2.1 Matriz de Signos</h3>
-        <p>Los cofactores se calculan aplicando el signo $C_{ij} = (-1)^{i+j} M_{ij}$. La matriz de signos es</p>
+        <p>Los cofactores se calculan aplicando el signo. La matriz de signos es</p>
         <div class="matrix-formula sign-matrix">${getSignMatrixLatex()}</div>
         
         <h3>2.2 Cálculo Detallado de los 9 Cofactores</h3>
-        <p>Cada cofactor se calcula a partir del determinante del menor M_ij correspondiente.</p>
+        <p>Cada cofactor se calcula a partir del determinante del menor M<sub>ij</sub> correspondiente.</p>
         <div class="cofactor-grid">${CSteps.join('\n')}</div>
         <p>Matriz de Cofactores (C)</p>
         <div class="matrix-formula">${generateLatexMatrix(C_display)}</div>
@@ -574,7 +574,7 @@ function calculateInverse() {
     const adjA_display = adjA_raw.map(row => row.map(formatNumber));
     let step3Content = `<div id="step-3" class="step hidden-step">
         <h2>Paso 3: Matriz Adjunta (adj(A))</h2>
-        <p>La Matriz Adjunta es la transpuesta de la Matriz de Cofactores: Adj(A) = C^T</p>
+        <p>La Matriz Adjunta es la transpuesta de la Matriz de Cofactores: Adj(A) = C<sup>T</</p>
         <div class="matrix-formula">${generateLatexMatrix(adjA_display)}</div>
     </div>`;
     stepsHTML.push(step3Content);
