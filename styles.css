@@ -456,3 +456,118 @@ h2, h3 {
         page-break-inside: avoid;
     }
 }
+
+/* ------------------------------------------- */
+/* --- SECCIÓN AÑADIDA: EFECTOS DINÁMICOS --- */
+/* ------------------------------------------- */
+
+/* 1. Transición y animación para los Pasos (.step) */
+.step {
+    /* Propiedades de transición para suavizar la aparición */
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    opacity: 1; 
+    transform: translateY(0);
+}
+
+/* Keyframes para la animación de deslizamiento y desvanecimiento */
+@keyframes slideInFade {
+    0% {
+        opacity: 0;
+        transform: translateY(20px); /* Empieza 20px más abajo */
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0); /* Termina en su posición normal */
+    }
+}
+
+/* Aplicar la animación a los pasos que se revelan (excepto el primero) */
+/* El selector verifica cualquier div dentro de #results que no tenga la clase hidden-step */
+#results > div:not(.hidden-step):not(:first-child) {
+    animation: slideInFade 0.7s ease-out forwards;
+}
+
+
+/* 2. Efecto de "Pulso" para el Botón Flotante (#floating-controls button) */
+
+/* Keyframes para la animación de pulso */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.6); /* Color del botón */
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(52, 152, 219, 0); /* Se expande y se desvanece */
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(52, 152, 219, 0);
+    }
+}
+
+#floating-controls button {
+    /* Sobrescribir el box-shadow existente para incluir transición y animación */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); 
+    transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
+    
+    /* Aplicar animación de pulso continuo */
+    animation: pulse 2s infinite; 
+}
+
+#floating-controls button:hover {
+    /* Detener la animación de pulso al pasar el ratón para una mejor interacción */
+    animation: none; 
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Estilos para el Footer (Pie de Página) --- */
+.app-footer {
+    margin-top: 40px;
+    padding: 15px 0;
+    border-top: 1px solid #ddd;
+    text-align: center;
+    font-size: 0.9em;
+    color: #777;
+}
+
+.app-footer p {
+    margin: 5px 0;
+}
+
+.app-footer strong {
+    color: #333;
+}
+
+/* Ajuste para impresión */
+@media print {
+    .app-footer {
+        display: block !important;
+        border-top: 1px dashed #999;
+        margin-top: 20px;
+        color: #555;
+    }
+}
+/* Aplicar la fuente general Cormorant Garamond (Opción 1) al cuerpo, 
+   y la fuente caligráfica solo a secciones específicas. */
+
+/* Estilo para el título principal */
+header h1 {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.8em; /* Aumentar el tamaño para destacar */
+    font-weight: 700;
+}
+
+/* Estilo para el Footer */
+.app-footer p {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #333; /* Color oscuro para mayor contraste */
+}
+
+/* Si quieres que los nombres de los pasos mantengan el estilo formal (Cormorant Garamond), 
+   déjalos como están, o si prefieres un estilo caligráfico, aplícalo aquí: */
+/*
+h2 {
+    font-family: 'Dancing Script', cursive;
+    font-weight: 700;
+}
+*/
