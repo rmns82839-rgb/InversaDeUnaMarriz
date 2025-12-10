@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inversa por Adjunta de Una Ma (3x3)</title>
+    <title>Inversa por Adjunta de Una Matriz (3x3)</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
@@ -28,7 +28,7 @@
     </div>
     
     <div class="size-selector">
-        <label for="matrixSize"></label>
+        <label for="matrixSize">Seleccionar Tamaño:</label> 
         <select id="matrixSize" onchange="generateMatrixInputs(); saveMatrixSize();">
             <option value="2">2 x 2</option>
             <option value="3" selected>3 x 3</option>
@@ -41,13 +41,17 @@
 
     <div class="control-buttons">
         <button id="calculate-det" onclick="calculateInverse()">Paso a Paso🧮</button>
-        <button class="secondary" id="clear-inputs" onclick="resetInputs()">↩️</button>
-        <button class="primary-print" id="print-btn" onclick="printResults()">🖨️</button>
+        <button class="secondary" id="clear-inputs" onclick="resetInputs()">↩️ Limpiar</button>
+        <button class="primary-print" id="print-btn" onclick="printResults()">🖨️ Imprimir</button>
     </div>
 
     <div id="results">
         </div>
 
+</div>
+
+<div id="floating-controls">
+    <button id="next-step-btn" onclick="nextStep()" style="display:none;">Siguiente Paso ⏭️</button>
 </div>
 
 <script src="script.js"></script>
