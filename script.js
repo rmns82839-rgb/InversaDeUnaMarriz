@@ -5,16 +5,18 @@ const defaultMatrix3x3 = [
     [2, 0, 2]
 ];
 
-// Función para calcular el Máximo Común Divisor (necesario para simplificar fracciones)
+// Estado global para el flujo paso a paso
+let currentStepIndex = 0; 
+const totalSteps = 4;
+
+// --- Funciones Auxiliares Matemáticas ---
+
 function gcd(a, b) {
     a = Math.abs(Math.round(a));
     b = Math.abs(Math.round(b));
     return b ? gcd(b, a % b) : a;
 }
 
-/**
- * Función auxiliar para dar formato a los números, evita ceros no significativos.
- */
 function formatNumber(num) {
     if (Math.abs(num) < 1e-9) {
         return '0'; 
@@ -25,9 +27,6 @@ function formatNumber(num) {
     return Number(num).toPrecision(5).replace(/\.0+$/, ''); 
 }
 
-/**
- * Convierte un número y un denominador a una fracción simplificada.
- */
 function toFraction(num, den) {
     if (den === 0) return { numerator: num, denominator: 0, latex: `\\frac{${formatNumber(num)}}{0}` };
     if (num === 0) return { numerator: 0, denominator: 1, latex: '0' };
@@ -57,11 +56,25 @@ function toFraction(num, den) {
 }
 
 
-// --- Funciones de Almacenamiento Local (Persistencia) ---
+// --- Funciones de Utilidad (Flujo, Inputs, Persistencia) ---
+
+function transposeMatrix(M) {
+    if (!M || M.length === 0) return [];
+    const rows = M.length;
+    const cols = M[0].length;
+    const MT = [];
+    for (let j = 0; j < cols; j++) {
+        MT[j] = [];
+        for (let i = 0; i < rows; i++) {
+            MT[j][i] = M[i][j];
+        }
+    }
+    return MT;
+}
 
 function saveMatrixData() {
     const size = parseInt(document.getElementById('matrixSize').value);
-    const matrixData = getMatrix();
+    const matrixData = getMatrix().map(row => row.map(val => val.toString()));
     localStorage.setItem('matrixSize', size);
     localStorage.setItem('matrixData', JSON.stringify(matrixData));
     
@@ -112,9 +125,6 @@ function loadState() {
     }
 }
 
-
-// --- Funciones de Utilidad (Inputs y Display) ---
-
 function generateMatrixInputs() {
     const size = parseInt(document.getElementById('matrixSize').value);
     const inputDiv = document.getElementById('matrix-input');
@@ -150,7 +160,7 @@ function getMatrix() {
         for (let j = 0; j < size; j++) {
             const id = `a${i}${j}`;
             const input = document.getElementById(id);
-            const value = input ? Number(input.value) : 0;
+            const value = input && input.value !== '' ? parseFloat(input.value) : 0;
             row.push(value);
         }
         matrix.push(row);
@@ -183,30 +193,100 @@ function getSignMatrixLatex() {
     return generateLatexMatrix(signs, 'v');
 }
 
-// --- Visualización de Sarrus (3x5) ---
-function generateSarrusVisual(A) {
-    const sarrus = [];
-    A.forEach(row => sarrus.push([...row, row[0], row[1]]));
 
+function nextStep() {
+    currentStepIndex++;
+    
+    if (currentStepIndex > totalSteps) {
+        currentStepIndex = totalSteps; 
+        document.getElementById('next-step-btn').style.display = 'none';
+        return;
+    }
+    
+    const nextBtn = document.getElementById('next-step-btn');
+    
+    const stepToShow = document.getElementById(`step-${currentStepIndex}`);
+    if (stepToShow) {
+        stepToShow.style.display = 'block';
+    }
+    
+    const resultsDiv = document.getElementById('results');
+    if (typeof MathJax !== 'undefined') MathJax.typesetPromise([resultsDiv]);
+    
+    if (currentStepIndex === totalSteps) {
+        nextBtn.style.display = 'none';
+    } else {
+        nextBtn.innerHTML = `Siguiente Paso ⏭️ (${currentStepIndex}/${totalSteps - 1})`;
+    }
+}
+
+
+function setupStepControls(hasError) {
+    const nextBtn = document.getElementById('next-step-btn');
+    const calculateBtn = document.getElementById('calculate-det');
+    
+    if (hasError) {
+        nextBtn.style.display = 'none';
+        calculateBtn.style.display = 'block'; 
+    } else {
+        currentStepIndex = 1; 
+        nextBtn.style.display = 'block';
+        nextBtn.innerHTML = `Siguiente Paso ⏭️ (1/${totalSteps - 1})`;
+        calculateBtn.style.display = 'none'; 
+    }
+}
+
+
+// --- Lógica de Visualización ---
+
+/**
+ * Genera el HTML de la matriz 5x3, resaltando la diagonal indicada.
+ */
+function generateSarrusDetailVisual(A, startR, startC, isPositive) {
+    const sarrus = [
+        ...A, 
+        A[0], 
+        A[1]  
+    ];
+    
+    let colorClass = '';
+    if (isPositive) {
+        if (startR === 0 && startC === 0) colorClass = 'P1';
+        else if (startR === 1 && startC === 0) colorClass = 'P2';
+        else if (startR === 2 && startC === 0) colorClass = 'P3';
+    } else {
+        if (startR === 0 && startC === 2) colorClass = 'N1';
+        else if (startR === 1 && startC === 2) colorClass = 'N2';
+        else if (startR === 2 && startC === 2) colorClass = 'N3';
+    }
+    
     let html = '<div class="sarrus-container"><div class="sarrus-matrix">';
 
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 5; j++) {
+    for (let i = 0; i < 5; i++) {
+        if (i === 3) {
+             html += `<span class="separator"></span>`; 
+        }
+
+        for (let j = 0; j < 3; j++) {
             const value = formatNumber(sarrus[i][j]);
             
-            let sarrus_class = '';
+            let elementClass = '';
             
-            // Positivas (suma)
-            if ((i === 0 && j === 0) || (i === 1 && j === 1) || (i === 2 && j === 2)) sarrus_class += ' p1';
-            if ((i === 0 && j === 1) || (i === 1 && j === 2) || (i === 2 && j === 3)) sarrus_class += ' p2';
-            if ((i === 0 && j === 2) || (i === 1 && j === 3) || (i === 2 && j === 4)) sarrus_class += ' p3';
+            const rowOffset = i - startR;
+            if (rowOffset >= 0 && rowOffset < 3) {
+                let colTarget;
+                if (isPositive) {
+                    colTarget = startC + rowOffset;
+                } else {
+                    colTarget = startC - rowOffset;
+                }
+                
+                if (j === colTarget) {
+                    elementClass = `diag-highlight ${colorClass}`;
+                }
+            }
             
-            // Negativas (resta)
-            if ((i === 0 && j === 2) || (i === 1 && j === 1) || (i === 2 && j === 0)) sarrus_class += ' n1';
-            if ((i === 0 && j === 3) || (i === 1 && j === 2) || (i === 2 && j === 1)) sarrus_class += ' n2';
-            if ((i === 0 && j === 4) || (i === 1 && j === 3) || (i === 2 && j === 2)) sarrus_class += ' n3';
-            
-            html += `<span class="${sarrus_class.trim()}">${value}</span>`;
+            html += `<span class="${elementClass.trim()}">${value}</span>`;
         }
     }
 
@@ -214,7 +294,34 @@ function generateSarrusVisual(A) {
     return html;
 }
 
-// --- Visualización de Menor 2x2 con Colores Únicos ---
+/**
+ * Genera la matriz 3x3 completa, sombreando la fila r y columna c excluidas.
+ */
+function generateMatrixWithMinorMask(A, r, c) {
+    let html = '<div class="matrix-with-mask">';
+    
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            const value = formatNumber(A[i][j]);
+            let elementClass = '';
+            
+            if (i === r || j === c) {
+                elementClass = 'excluded';
+            } else {
+                elementClass = 'included';
+            }
+            
+            html += `<span class="${elementClass}">${value}</span>`;
+        }
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+/**
+ * Genera el HTML para el menor 2x2 en formato Matriz 2x2 con colores.
+ */
 function generateMinorVisual(A, r, c) {
     const tempMatrix = [];
     for (let i = 0; i < 3; i++) {
@@ -238,6 +345,18 @@ function generateMinorVisual(A, r, c) {
     `;
 }
 
+
+function generateRawFractionLatex(matrix, det) {
+    if (det === 0) return '';
+    
+    const rawFractions = matrix.map(row => row.map(val => {
+        return `\\frac{${formatNumber(val)}}{${formatNumber(det)}}`;
+    }));
+    
+    return generateLatexMatrix(rawFractions);
+}
+
+
 // --- Lógica de Cálculo (3x3) ---
 
 function calculateDeterminant(A) {
@@ -259,14 +378,63 @@ function calculateDeterminant(A) {
     
     const det = posSum - negSum;
     
-    // Texto de explicación limpio
+    // --- DETALLE DE SARRUS ---
+    const visualPos1 = generateSarrusDetailVisual(A, 0, 0, true);
+    const visualPos2 = generateSarrusDetailVisual(A, 1, 0, true);
+    const visualPos3 = generateSarrusDetailVisual(A, 2, 0, true);
+
+    const visualNeg1 = generateSarrusDetailVisual(A, 0, 2, false);
+    const visualNeg2 = generateSarrusDetailVisual(A, 1, 2, false);
+    const visualNeg3 = generateSarrusDetailVisual(A, 2, 2, false);
+    
+    // TEXTO LIMPIO para las explicaciones
     const step = `
-        <p>Visualización de la Regla de Sarrus:</p>
-        ${generateSarrusVisual(A)}
-        $$\\text{det}(A) = (${formatNumber(term1)} + ${formatNumber(term2)} + ${formatNumber(term3)}) - (${formatNumber(term4)} + ${formatNumber(term5)} + ${formatNumber(term6)})$$
-        $$\\text{det}(A) = (${formatNumber(posSum)}) - (${formatNumber(negSum)})$$
-        $$\\text{det}(A) = ${formatNumber(posSum - negSum)}$$
-        $$\\text{det}(A) = ${formatNumber(det)}$$
+        <h3>1.1 Sumas Positivas (+)</h3>
+        <p>Se multiplican los elementos de las diagonales que van de izquierda a derecha y se suman:</p>
+        
+        <div class="sarrus-details-grid">
+            <div class="sarrus-detail-block">
+                <p>Diagonal 1: (${formatNumber(a11)} &middot; ${formatNumber(a22)} &middot; ${formatNumber(a33)}) = ${formatNumber(term1)}</p>
+                ${visualPos1}
+            </div>
+            <div class="sarrus-detail-block">
+                <p>Diagonal 2: (${formatNumber(a21)} &middot; ${formatNumber(a32)} &middot; ${formatNumber(a13)}) = ${formatNumber(term2)}</p>
+                ${visualPos2}
+            </div>
+            <div class="sarrus-detail-block">
+                <p>Diagonal 3: (${formatNumber(a31)} &middot; ${formatNumber(a12)} &middot; ${formatNumber(a23)}) = ${formatNumber(term3)}</p>
+                ${visualPos3}
+            </div>
+        </div>
+        
+        $$ \\text{Suma Positiva} = ${formatNumber(term1)} + ${formatNumber(term2)} + ${formatNumber(term3)} = ${formatNumber(posSum)} $$
+        
+        <h3>1.2 Sumas Negativas (-)</h3>
+        <p>Se multiplican los elementos de las diagonales que van de derecha a izquierda y se restan (o se suman con signo negativo):</p>
+        
+        <div class="sarrus-details-grid">
+            <div class="sarrus-detail-block">
+                <p>Diagonal 4: (${formatNumber(a13)} &middot; ${formatNumber(a22)} &middot; ${formatNumber(a31)}) = ${formatNumber(term4)}</p>
+                ${visualNeg1}
+            </div>
+            <div class="sarrus-detail-block">
+                <p>Diagonal 5: (${formatNumber(a11)} &middot; ${formatNumber(a23)} &middot; ${formatNumber(a32)}) = ${formatNumber(term5)}</p>
+                ${visualNeg2}
+            </div>
+            <div class="sarrus-detail-block">
+                <p>Diagonal 6: (${formatNumber(a12)} &middot; ${formatNumber(a21)} &middot; ${formatNumber(a33)}) = ${formatNumber(term6)}</p>
+                ${visualNeg3}
+            </div>
+        </div>
+        
+        $$ \\text{Suma Negativa} = -(${formatNumber(term4)} + ${formatNumber(term5)} + ${formatNumber(term6)}) = -${formatNumber(negSum)} $$
+        
+        <h3>1.3 Resultado Final</h3>
+        <p>El determinante es la resta de la Suma Positiva menos la Suma Negativa:</p>
+        $$ \\text{det}(A) = (\\text{Suma Positiva}) - (\\text{Suma Negativa}) $$
+        $$ \\text{det}(A) = (${formatNumber(posSum)}) - (${formatNumber(negSum)}) $$
+        $$ \\text{det}(A) = ${formatNumber(posSum - negSum)} $$
+        $$ \\text{det}(A) = \\mathbf{${formatNumber(det)}} $$
     `;
 
     return { det, step };
@@ -303,15 +471,26 @@ function calculateCofactorMatrix(A) {
         const cofactor = (idx.sign === '-') ? -minorVal : minorVal;
         minors.push(cofactor);
 
+        const visualMask = generateMatrixWithMinorMask(A, idx.r, idx.c);
         const visualMinor = generateMinorVisual(A, idx.r, idx.c);
 
+        // TEXTO LIMPIO para las explicaciones
         steps.push(`
             <div class="minor-step-detail">
-                $$C_{${idx.r + 1}${idx.c + 1}} = ${idx.sign}\\begin{vmatrix} ${formatNumber(elem_a)} & ${formatNumber(elem_b)} \\\\ ${formatNumber(elem_c)} & ${formatNumber(elem_d)} \\end{vmatrix}$$
+                <h3>Cofactor C${idx.r + 1}${idx.c + 1}</h3>
+                <p>Matriz A con Fila ${idx.r + 1} y Columna ${idx.c + 1} excluidas:</p>
+                ${visualMask}
+                
+                $$ M_{${idx.r + 1}${idx.c + 1}} = \\begin{vmatrix} ${formatNumber(elem_a)} & ${formatNumber(elem_b)} \\\\ ${formatNumber(elem_c)} & ${formatNumber(elem_d)} \\end{vmatrix} $$
+                
+                <p>Cálculo del determinante 2 x 2:</p>
                 ${visualMinor}
-                $$= ${idx.sign}((${formatNumber(elem_a)})(${formatNumber(elem_d)}) - (${formatNumber(elem_c)})(${formatNumber(elem_b)}))$$
-                $$= ${idx.sign}(${formatNumber(prod1)} - ${formatNumber(prod2)})$$
-                $$= ${idx.sign}(${formatNumber(minorVal)}) = ${formatNumber(cofactor)}$$
+                
+                $$ M_{${idx.r + 1}${idx.c + 1}} = ((${formatNumber(elem_a)})(${formatNumber(elem_d)})) - ((${formatNumber(elem_c)})(${formatNumber(elem_b)})) $$
+                $$ = ${formatNumber(prod1)} - ${formatNumber(prod2)} = ${formatNumber(minorVal)} $$
+                
+                <p>Cofactor final (C${idx.r + 1}${idx.c + 1}):</p>
+                $$ C_{${idx.r + 1}${idx.c + 1}} = ${idx.sign}(M_{${idx.r + 1}${idx.c + 1}}) = ${idx.sign}(${formatNumber(minorVal)}) = \\mathbf{${formatNumber(cofactor)}} $$
             </div>
         `);
     });
@@ -335,78 +514,74 @@ function calculateInverse() {
     const size = A.length;
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = ''; 
-
-    // Muestra la matriz de entrada al inicio.
-    let html = `<div class="step">
-        <h2>Matriz de Entrada A (${size} x ${size})</h2>
-        <div class="matrix-formula">${generateLatexMatrix(A.map(row => row.map(formatNumber)))}</div>
-    </div>`;
     
-    if (size !== 3) {
-        html += `<div class="step" style="border-left-color: #dc3545; background-color: #f8d7da;">
-            <h2>Cálculo Limitado</h2>
-            <p>El método de la Matriz Adjunta solo está implementado para matrices 3 x 3.</p>
-        </div>`;
-        resultsDiv.innerHTML = html;
-        if (typeof MathJax !== 'undefined') MathJax.typesetPromise([resultsDiv]);
-        return;
-    }
+    setupStepControls(false); 
+    
+    let stepsHTML = [];
 
-    // --- CÁLCULO DETALLADO SOLO PARA 3x3 ---
-
-    // 1. Determinante
+    // --- PASO 1: Matriz de Entrada y Determinante ---
     const { det, step: detStep } = calculateDeterminant(A);
 
-    html += `<div class="step">
-        <h2>1. Cálculo del Determinante (det(A))</h2>
+    let step1Content = `<div id="step-1" class="step">
+        <h2>Paso 1: Matriz de Entrada A y Determinante (det(A))</h2>
+        <p>Matriz de Entrada A (${size} x ${size})</p>
+        <div class="matrix-formula">${generateLatexMatrix(A.map(row => row.map(formatNumber)))}</div>
         <p>Desarrollo del determinante por la Regla de Sarrus:</p>
         <div class="matrix-formula">${detStep}</div>
     </div>`;
-
-    if (Math.abs(det) < 1e-9) { 
-        html += `<div class="step" style="border-left-color: #dc3545; background-color: #f8d7da;">
-            <h2>Resultado Final</h2>
-            <p>El determinante es CERO (${formatNumber(det)}). La matriz NO tiene inversa, es singular.</p>
-        </div>`;
-        resultsDiv.innerHTML = html;
+    stepsHTML.push(step1Content);
+    
+    
+    if (size !== 3 || Math.abs(det) < 1e-9) { 
+        let errorContent = '';
+        if (size !== 3) {
+             errorContent = `<div class="step" style="border-left-color: #dc3545; background-color: #f8d7da;">
+                <h2>Cálculo Limitado</h2>
+                <p>El método de la Matriz Adjunta solo está implementado para matrices 3 x 3.</p>
+            </div>`;
+        } else {
+             errorContent = `<div class="step" style="border-left-color: #dc3545; background-color: #f8d7da;">
+                <h2>Resultado Final</h2>
+                <p>El determinante es CERO (${formatNumber(det)}). La matriz NO tiene inversa, es singular.</p>
+            </div>`;
+        }
+        
+        resultsDiv.innerHTML = step1Content + errorContent;
+        setupStepControls(true); 
         if (typeof MathJax !== 'undefined') MathJax.typesetPromise([resultsDiv]);
         return;
     }
 
-    // 2. Cofactores
+    // --- PASO 2: Cofactores ---
     const { C_raw, C_display, steps: CSteps } = calculateCofactorMatrix(A);
-    
-    // Matriz de Signos (texto limpio)
-    html += `<div class="step">
-        <h2>2. Matriz de Cofactores (C)</h2>
+    let step2Content = `<div id="step-2" class="step hidden-step">
+        <h2>Paso 2: Matriz de Cofactores (C)</h2>
         <h3>2.1 Matriz de Signos</h3>
-        <p>Los cofactores se calculan aplicando el signo a cada menor. La matriz de signos es</p>
+        <p>Los cofactores se calculan aplicando el signo $C_{ij} = (-1)^{i+j} M_{ij}$. La matriz de signos es</p>
         <div class="matrix-formula sign-matrix">${getSignMatrixLatex()}</div>
         
         <h3>2.2 Cálculo Detallado de los 9 Cofactores</h3>
-        <p>Cada cofactor se calcula como el signo por el determinante del menor correspondiente</p>
+        <p>Cada cofactor se calcula a partir del determinante del menor M_ij correspondiente.</p>
         <div class="cofactor-grid">${CSteps.join('\n')}</div>
         <p>Matriz de Cofactores (C)</p>
         <div class="matrix-formula">${generateLatexMatrix(C_display)}</div>
     </div>`;
+    stepsHTML.push(step2Content);
 
-    // 3. Adjunta (Transpuesta de Cofactores)
-    const adjA_raw = [
-        [C_raw[0][0], C_raw[1][0], C_raw[2][0]],
-        [C_raw[0][1], C_raw[1][1], C_raw[2][1]],
-        [C_raw[0][2], C_raw[1][2], C_raw[2][2]]
-    ];
+
+    // --- PASO 3: Adjunta (Transpuesta de Cofactores) ---
+    const adjA_raw = transposeMatrix(C_raw); 
     const adjA_display = adjA_raw.map(row => row.map(formatNumber));
-
-    // Explicación de Paso 3 (texto limpio)
-    html += `<div class="step">
-        <h2>3. Matriz Adjunta (adj(A)) (Transpuesta de C)</h2>
-        <p>La Matriz Adjunta Traspuesta: convertir las filas en columnas o viceversa.</p>
-        $$\\text{adj}(A) = C^T$$
+    let step3Content = `<div id="step-3" class="step hidden-step">
+        <h2>Paso 3: Matriz Adjunta (adj(A))</h2>
+        <p>La Matriz Adjunta es la transpuesta de la Matriz de Cofactores: Adj(A) = C^T</p>
         <div class="matrix-formula">${generateLatexMatrix(adjA_display)}</div>
     </div>`;
+    stepsHTML.push(step3Content);
 
-    // 4. Inversa (División por el Determinante)
+    // --- PASO 4: Inversa (División por el Determinante) ---
+    const invARawFractionLatex = generateRawFractionLatex(adjA_raw, det); 
+
     const invAFractionsLatex = adjA_raw.map(row => row.map(val => {
         const fraction = toFraction(val, det);
         return fraction.latex;
@@ -414,23 +589,27 @@ function calculateInverse() {
 
     const invADecimal = adjA_raw.map(row => row.map(val => val / det).map(formatNumber));
 
-    // Explicación de Paso 4 (texto limpio)
-    html += `<div class="step" style="border-left-color: #f1c40f; background-color: #fffaf0;">
-        <h2>4. Matriz Inversa (A⁻¹)</h2>
-        <p>Finalmente, se divide la Matriz Adjunta por el Determinante (${formatNumber(det)}), el cual actúa como un factor escalar:</p>
-        $$A^{-1} = \\frac{1}{\\text{det}(A)} \\cdot \\text{adj}(A) = \\frac{1}{${formatNumber(det)}} \\cdot ${generateLatexMatrix(adjA_display)}$$
+    let step4Content = `<div id="step-4" class="step hidden-step" style="border-left-color: #f1c40f; background-color: #fffaf0;">
+        <h2>Paso 4: Matriz Inversa (A⁻¹)</h2>
+        <p>Se divide la Matriz Adjunta por el Determinante (1/det(A)):</p>
+        $$ A^{-1} = \\frac{1}{\\text{det}(A)} \\cdot \\text{adj}(A) = \\frac{1}{${formatNumber(det)}} \\cdot ${generateLatexMatrix(adjA_display)} $$
         
-        <p>Matriz Inversa en Fracciones Simplificadas</p>
+        <h3>4.1 Matriz Inversa en Fracciones (Sin Simplificar)</h3>
+        <div class="matrix-formula">${invARawFractionLatex}</div>
+
+        <h3>4.2 Matriz Inversa en Fracciones (Simplificada)</h3>
         <div class="matrix-formula">${generateLatexMatrix(invAFractionsLatex)}</div>
+        
         <p>Matriz Inversa en Decimales (aproximada)</p>
         <div class="matrix-formula">${generateLatexMatrix(invADecimal)}</div>
     </div>`;
+    stepsHTML.push(step4Content);
 
-    resultsDiv.innerHTML = html;
+    resultsDiv.innerHTML = stepsHTML.join('');
+    
     if (typeof MathJax !== 'undefined') MathJax.typesetPromise([resultsDiv]);
 }
 
-// --- Funciones de Control (sin cambios) ---
 
 function resetInputs() {
     const size = parseInt(document.getElementById('matrixSize').value);
@@ -452,14 +631,29 @@ function resetInputs() {
 
 function clearResults() {
     document.getElementById('results').innerHTML = '';
+    document.getElementById('calculate-det').style.display = 'block';
+    document.getElementById('next-step-btn').style.display = 'none';
+    currentStepIndex = 0;
 }
 
 function printResults() {
-    calculateInverse(); 
-    window.print();
+    if (document.getElementById('results').innerHTML === '') {
+        calculateInverse(); 
+    }
+    
+    for (let i = 2; i <= totalSteps; i++) {
+        const step = document.getElementById(`step-${i}`);
+        if (step) {
+            step.classList.remove('hidden-step'); 
+            step.style.display = 'block'; 
+        }
+    }
+    
+    if (typeof MathJax !== 'undefined') MathJax.typesetPromise([document.getElementById('results')]).then(() => {
+        window.print();
+    });
 }
 
-// --- Inicialización del DOM (sin cambios) ---
 document.addEventListener('DOMContentLoaded', () => {
     loadState();
     
@@ -475,6 +669,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const infoInputs = ['info-alumno', 'info-materia', 'info-carrera', 'info-sede', 'info-jornada'];
     infoInputs.forEach(id => {
-        document.getElementById(id).addEventListener('input', saveMatrixData);
+        const input = document.getElementById(id);
+        if(input) input.addEventListener('input', saveMatrixData);
     });
+    
+    if (document.getElementById('results').innerHTML !== '') {
+        if (typeof MathJax !== 'undefined') MathJax.typesetPromise([document.getElementById('results')]);
+    }
 });
