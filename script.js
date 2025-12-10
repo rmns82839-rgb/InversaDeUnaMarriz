@@ -557,7 +557,7 @@ function calculateInverse() {
     let step2Content = `<div id="step-2" class="step hidden-step">
         <h2>Paso 2: Matriz de Cofactores (C)</h2>
         <h3>2.1 Matriz de Signos</h3>
-        <p>Los cofactores se calculan aplicando el signo. La matriz de signos es</p>
+        <p>Los cofactores se calculan aplicando el signo. La matriz de signos es la siguiente:</p>
         <div class="matrix-formula sign-matrix">${getSignMatrixLatex()}</div>
         
         <h3>2.2 Cálculo Detallado de los 9 Cofactores</h3>
@@ -574,7 +574,7 @@ function calculateInverse() {
     const adjA_display = adjA_raw.map(row => row.map(formatNumber));
     let step3Content = `<div id="step-3" class="step hidden-step">
         <h2>Paso 3: Matriz Adjunta (adj(A))</h2>
-        <p>La Matriz Adjunta es la transpuesta de la Matriz de Cofactores: Adj(A) = C<sup>T</</p>
+        <p>La Matriz Adjunta es la transpuesta de la Matriz de Cofactores: Adj(A) = C<sup>T</sup></p>
         <div class="matrix-formula">${generateLatexMatrix(adjA_display)}</div>
     </div>`;
     stepsHTML.push(step3Content);
@@ -636,22 +636,39 @@ function clearResults() {
     currentStepIndex = 0;
 }
 
+/**
+ * CORRECCIÓN PARA IMPRESIÓN:
+ * Esta función asegura que todos los pasos se hagan visibles antes de imprimir.
+ * Si el CSS usa 'display: none', esto lo sobrescribe temporalmente.
+ */
 function printResults() {
+    // 1. Asegura que los resultados se hayan calculado y el HTML esté generado.
     if (document.getElementById('results').innerHTML === '') {
         calculateInverse(); 
     }
     
-    for (let i = 2; i <= totalSteps; i++) {
+    // 2. Itera y hace visibles todos los pasos.
+    // Empezamos desde el 1 porque step-1 siempre se muestra al inicio del cálculo.
+    for (let i = 1; i <= totalSteps; i++) { 
         const step = document.getElementById(`step-${i}`);
         if (step) {
-            step.classList.remove('hidden-step'); 
+            // Aseguramos que se muestre, sobrescribiendo el 'hidden-step' o 'display: none'
             step.style.display = 'block'; 
+            // Esto es opcional, pero ayuda si el CSS usa la clase para ocultar
+            step.classList.remove('hidden-step'); 
         }
     }
     
-    if (typeof MathJax !== 'undefined') MathJax.typesetPromise([document.getElementById('results')]).then(() => {
+    // 3. Renderiza MathJax (crucial para que las fórmulas se vean en la impresión)
+    if (typeof MathJax !== 'undefined') {
+        MathJax.typesetPromise([document.getElementById('results')]).then(() => {
+            // 4. Llama a la ventana de impresión solo después de que MathJax termine.
+            window.print();
+        });
+    } else {
+        // Si MathJax no está disponible, imprimir de todas formas (puede que las fórmulas no salgan bien)
         window.print();
-    });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
