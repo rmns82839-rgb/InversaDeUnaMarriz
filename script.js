@@ -637,40 +637,47 @@ function clearResults() {
 }
 
 /**
- * CORRECCIÓN PARA IMPRESIÓN:
- * Esta función asegura que todos los pasos se hagan visibles antes de imprimir.
- * Si el CSS usa 'display: none', esto lo sobrescribe temporalmente.
+ * SOLUCIÓN FINAL REFORZADA para compatibilidad móvil:
+ * Se basa en la promesa de MathJax y limpia el código de impresión.
+ * Se asume que el CSS @media print ya está configurado para mostrar .hidden-step.
  */
 function printResults() {
-    // 1. Asegura que los resultados se hayan calculado y el HTML esté generado.
+    // 1. Asegura que los resultados se hayan calculado.
     if (document.getElementById('results').innerHTML === '') {
         calculateInverse(); 
     }
     
-    // 2. Itera y hace visibles todos los pasos.
-    // Empezamos desde el 1 porque step-1 siempre se muestra al inicio del cálculo.
+    const resultsDiv = document.getElementById('results');
+    
+    // 2. Hace visible todos los pasos en el DOM principal antes de llamar a MathJax.
     for (let i = 1; i <= totalSteps; i++) { 
         const step = document.getElementById(`step-${i}`);
         if (step) {
-            // Aseguramos que se muestre, sobrescribiendo el 'hidden-step' o 'display: none'
             step.style.display = 'block'; 
-            // Esto es opcional, pero ayuda si el CSS usa la clase para ocultar
             step.classList.remove('hidden-step'); 
         }
     }
-    
-    // 3. Renderiza MathJax (crucial para que las fórmulas se vean en la impresión)
-    if (typeof MathJax !== 'undefined') {
-        MathJax.typesetPromise([document.getElementById('results')]).then(() => {
-            // 4. Llama a la ventana de impresión solo después de que MathJax termine.
-            window.print();
-        });
-    } else {
-        // Si MathJax no está disponible, imprimir de todas formas (puede que las fórmulas no salgan bien)
-        window.print();
-    }
-}
 
+    // 3. Renderiza MathJax (la acción crítica de sincronización).
+    // Esto crea una promesa para que el código espere a que las fórmulas se dibujen.
+    const renderPromise = (typeof MathJax !== 'undefined') 
+        ? MathJax.typesetPromise([resultsDiv])
+        : Promise.resolve(); // Resuelve inmediatamente si MathJax no está cargado
+
+    // 4. Imprime SÓLO después de que MathJax haya terminado.
+    renderPromise.then(() => {
+        // En entornos móviles, un pequeño retraso (100ms) mejora la sincronización de la API de impresión.
+        setTimeout(() => {
+            window.print();
+        }, 100); 
+        
+    }).catch(error => {
+        console.error("Error durante el renderizado de MathJax o la impresión:", error);
+    });
+}
+    
+// La siguiente sección NO estaba dentro de ninguna función y fue corregida.
+// Asegura que el estado inicial se cargue y que los listeners de eventos se configuren.
 document.addEventListener('DOMContentLoaded', () => {
     loadState();
     
@@ -690,6 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(input) input.addEventListener('input', saveMatrixData);
     });
     
+    // Si ya hay resultados cargados desde localStorage, renderizarlos con MathJax al inicio
     if (document.getElementById('results').innerHTML !== '') {
         if (typeof MathJax !== 'undefined') MathJax.typesetPromise([document.getElementById('results')]);
     }
